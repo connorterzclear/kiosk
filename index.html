@@ -11,49 +11,67 @@
       margin: 0;
       background: black;
       overflow: hidden;
+      color: white;
+      font-family: Arial;
     }
     video {
       width: 100vw;
       height: 100vh;
       object-fit: cover;
     }
+    #error {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: red;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
 
+<div id="error">Loading...</div>
 <video id="video" autoplay playsinline></video>
 
 <script>
   const video = document.getElementById('video');
+  const errorBox = document.getElementById('error');
   const src = "https://stream.mux.com/Y2001DKbVER7Smp9fqzEkUJ4WO00xnixQ8.m3u8";
 
-  function start() {
+  try {
     if (window.Hls && Hls.isSupported()) {
+      errorBox.innerText = "Using hls.js";
+
       const hls = new Hls();
       hls.loadSource(src);
       hls.attachMedia(video);
 
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      hls.on(Hls.Events.MANIFEST_PARSED, function () {
+        errorBox.innerText = "Playing video";
         video.play();
       });
 
-      // loop fix
       video.addEventListener('ended', () => {
         video.currentTime = 0;
         video.play();
       });
 
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      errorBox.innerText = "Using native HLS";
+
       video.src = src;
-      video.addEventListener('loadedmetadata', () => {
+      video.addEventListener('loadedmetadata', function () {
         video.play();
       });
-    } else {
-      document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:40vh;'>HLS not supported</h1>";
-    }
-  }
 
-  window.onload = start;
+    } else {
+      errorBox.innerText = "HLS not supported";
+    }
+
+  } catch (e) {
+    errorBox.innerText = "ERROR: " + e.message;
+    console.error(e);
+  }
 </script>
 
 </body>

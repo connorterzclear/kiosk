@@ -1,20 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Video Kiosk</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8"></script>
 
   <style>
-    html, body {
+    body {
       margin: 0;
-      height: 100%;
       background: black;
       overflow: hidden;
     }
-
     video {
       width: 100vw;
       height: 100vh;
@@ -24,27 +21,39 @@
 </head>
 <body>
 
-<video id="video" autoplay loop playsinline></video>
+<video id="video" autoplay playsinline></video>
 
 <script>
   const video = document.getElementById('video');
-  const videoSrc = "https://stream.mux.com/Y2001DKbVER7Smp9fqzEkUJ4WO00xnixQ8.m3u8";
+  const src = "https://stream.mux.com/Y2001DKbVER7Smp9fqzEkUJ4WO00xnixQ8.m3u8";
 
-  if (Hls.isSupported()) {
-    const hls = new Hls();
-    hls.loadSource(videoSrc);
-    hls.attachMedia(video);
+  function start() {
+    if (window.Hls && Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(src);
+      hls.attachMedia(video);
 
-    hls.on(Hls.Events.MANIFEST_PARSED, function () {
-      video.play();
-    });
-  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    // Safari fallback
-    video.src = videoSrc;
-    video.addEventListener('loadedmetadata', function () {
-      video.play();
-    });
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play();
+      });
+
+      // loop fix
+      video.addEventListener('ended', () => {
+        video.currentTime = 0;
+        video.play();
+      });
+
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = src;
+      video.addEventListener('loadedmetadata', () => {
+        video.play();
+      });
+    } else {
+      document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:40vh;'>HLS not supported</h1>";
+    }
   }
+
+  window.onload = start;
 </script>
 
 </body>
